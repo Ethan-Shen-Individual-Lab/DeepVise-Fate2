@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>健康监测</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body, html {
+            background: linear-gradient(to bottom right, rgba(29, 36, 138, 0.75), rgba(79, 13, 94, 0.95), rgba(194, 114, 182, 0.65));
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-buttons {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 3;
+        }
+        .nav-button {
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.65);
+        }
+        .nav-button-special {
+            background-color: rgba(255, 255, 255, 0.65);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        main {
+            margin: 0 auto;
+            padding: 60px 40px 20px 40px;
+            flex-grow: 1;
+            background-color: transparent;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 2;
+            position: relative;
+        }
+        .line-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                15deg,
+                rgba(255, 255, 255, 0.05),
+                rgba(255, 255, 255, 0.05) 5px,
+                transparent 5px,
+                transparent 10px
+            );
+            pointer-events: none;
+        }
+        a.return-link {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 0.8em;
+            text-decoration: none;
+            z-index: 3;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .panel {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(101, 53, 215, 0.1);
+            position: absolute;
+            width: 45%;
+            height: 250px;
+            overflow-y: auto;
+            z-index: 3;
+        }
+        .top-left {
+            top: 70px;
+            left: 20px;
+        }
+        .top-right {
+            top: 70px;
+            right: 20px;
+        }
+        .bottom-left {
+            top: 450px;
+            left: 20px;
+        }
+        .bottom-right {
+            top: 450px;
+            right: 20px;
+        }
+        .panel h2 {
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        .panel h3 {
+            color: #9B6DFF;
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+        .panel p {
+            color: #FFFFFF;
+            line-height: 1.6;
+        }
+        .chart {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        #line-chart-container {
+            margin-top: 20px;
+        }
+        .curve-effect {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2), transparent 10%);
+            border-radius: 50%;
+            top: -50%;
+            left: -50%;
+            pointer-events: none;
+            animation: moveCurve 10s infinite linear;
+        }
+        @keyframes moveCurve {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(10%, 10%); }
+            100% { transform: translate(0, 0); }
+        }
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+        }
+        .video-container video {
+            width: 100%;
+            height: 110%;
+            object-fit: cover;
+        }
+        #healthScore {
+            color: #00FF00; /* 亮绿色 */
+            font-size: 2em; /* 字体大小 */
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.8); /* 发光效果 */
+            display: inline-block; /* 使其与问号在同一行 */
+            position: relative; /* 为提示框定位 */
+        }
+        .light-container {
+            display: flex;
+            align-items: center;
+            margin-left: -10px;
+            margin-top: 20px;
+        }
+        .light {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 0 5px;
+            background-color: gray; /* 默认颜色 */
+        }
+        .green { background-color: green; }
+        .yellow { background-color: yellow; }
+        .red { background-color: red; }
+        .light-label {
+            color: white;
+            font-size: 0.8em;
+            text-align: center;
+        }
+        .light-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: 10px; /* 添加间距 */
+        }
+        .tooltip {
+            display: none;
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            z-index: 10;
+            white-space: nowrap; /* 防止换行 */
+        }
+        .question-mark {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: white;
+            color: black;
+            text-align: center;
+            font-size: 12px;
+            line-height: 15px;
+            margin-left: 5px;
+            cursor: pointer;
+            position: absolute; /* 绝对定位 */
+            top: 38px; /* 调整位置 */
+            right: 570px; /* 调整位置 */
+            z-index: 10;
+        }
+        .anomaly-details {
+            margin-top: 10px;
+            color: white;
+        }
+        .logo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 3;
+        }
+        .logo img {
+            width: 100px; /* 调整图标大小 */
+            height: auto;
+        }
+        .toggle-button {
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .dropdown {
+            margin-bottom: 10px;
+        }
+        .alert-button {
+            margin-top: 10px;
+            cursor: pointer;
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .parameter-config {
+            display: none; /* 默认隐藏 */
+            margin-top: 10px;
+            color: white;
+        }
+        /* 据描述表格的样式 */
+        #dataDescriptionTable {
+            font-size: 0.85em; /*  */
+            color: #FFD700; /* 设置字体颜色为金色 */
+            width: 100%; /* 确保表格宽度为100% */
+            border-collapse: collapse; /* 合并边框 */
+            transition: transform 0.3s ease; /* 添加过渡效果 */
+            margin-bottom: 20px; /* 添加底部间距，避免与其他部分重叠 */
+            max-height: 150px; /* 设置最大高度，调小以避免重叠 */
+            overflow-y: auto; /* 超出部分可滚动 */
+        }
+
+        #dataDescriptionTable th {
+            background-color: rgba(255, 255, 255, 0.2); /* 表头背景色 */
+            color: white; /* 表头字体颜色 */
+            padding: 8px; /* 添加内边距，减少间距 */
+        }
+
+        #dataDescriptionTable td {
+            color: #FFD700; /* 数据单元格字体颜色为金色 */
+            padding: 8px; /* 添加内边距，减少间距 */
+        }
+
+        /* 为左边四列变量名设置白色 */
+        #dataDescriptionTable td:first-child {
+            color: white; /* 变量名颜色 */
+            width: 150px; /* 调宽变量名列 */
+        }
+
+        /* 添加炫酷效果 */
+        #dataDescriptionTable:hover {
+            transform: scale(1.02); /* 鼠标悬停时放大 */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* 添加阴影效果 */
+        }
+
+        /* 闪光效果 */
+        @keyframes glow {
+            0% { text-shadow: 0 0 5px #9B6DFF, 0 0 10px #9B6DFF, 0 0 15px #9B6DFF; }
+            50% { text-shadow: 0 0 10px #9B6DFF, 0 0 20px #9B6DFF, 0 0 30px #9B6DFF; }
+            100% { text-shadow: 0 0 5px #9B6DFF, 0 0 10px #9B6DFF, 0 0 15px #9B6DFF; }
+        }
+
+        /* 应用闪光效果 */
+        #dataDescriptionTable td {
+            animation: glow 1.5s infinite; /* 应用闪光效果 */
+        }
+
+        /* 数据集概览标题样式 */
+        .data-description h2 {
+            font-size: 1em; /* 设置与电机模块电机温度一致的字体大小 */
+            color: #FFD700; /* 设置标题颜色为金色 */
+        }
+        /* 添加一些基本样式 */
+        #chart-container {
+            width: 100%;
+            height: 500px;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #learningDetails {
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        /* 修改功能区域的布局样式 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* 两列等宽 */
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .dashboard-item {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            height: 500px; /* 统一设置高度 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dashboard-item h2 {
+            color: #1a73e8;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8f0fe;
+        }
+
+        .chart-container {
+            flex: 1;
+            width: 100%;
+            min-height: 400px; /* 确保图表有足够的显示空间 */
+            position: relative;
+        }
+
+        /* 确保所有图表容器具有相同的基本样式 */
+        #realTimeChart,
+        #temperatureDistribution,
+        #vibrationAnalysis,
+        #pressureVariation {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 调整数据表格的容器大小 */
+        .data-table-container {
+            height: 400px; /* 与图表容器保持一致 */
+            overflow-y: auto;
+        }
+
+        /* 确保表格在容器中正确显示 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* 调整统计信息的显示 */
+        .stats-container {
+            height: 400px; /* 与其他容器保持一致 */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        .score-title {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 18px;
+            font-size: 12px;
+            color: #fff;
+            cursor: help;
+            position: relative;
+        }
+
+        .help-icon:hover::after {
+            content: attr(title);
+            position: absolute;
+            left: 100%;
+            top: 100%;
+            transform: translateY(-50%);
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-left: 10px;
+        }
+
+        .help-icon:hover::before {
+            content: '';
+            position: absolute;
+            left: 100%;
+            top: 100%;
+            transform: rotate(-45deg);
+            border: 6px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            margin-left: -2px;
+            margin-top: -8px;
+        }
+    </style>
+</head>
+<body>
+    <a href="intro.html" class="return-link">返回</a>  
+    <div class="logo">
+        <img src="figures/7.png" alt="Logo">
+    </div> 
+    <div class="nav-buttons">
+        <button class="nav-button" onclick="window.location.href='index.html'">首页</button>
+        <button class="nav-button-special" onclick="window.location.href='health_monitor.html'">健康监测</button>
+        <button class="nav-button" onclick="window.location.href='maintenance_optimization.html'">维护优化</button>
+        <button class="nav-button" onclick="window.location.href='production_scheduling.html'">产能预测与调度</button>
+        <button class="nav-button" onclick="window.location.href='quality_control_defect_prediction.html'">质量控制</button>
+        <button class="nav-button" onclick="window.location.href='privacy_security_management.html'">数据安全</button>
+    </div>
+    <div class="video-container">
+        <video autoplay muted loop>
+            <source src="figures/14.mp4" type="video/mp4">
+            您的浏览器不支持视频标签。
+        </video>
+    </div>
+    <main id="mainContent">
+        <div class="line-effect"></div>
+        <div class="panel top-left">
+            <h2>实时状态监控</h2>
+            <div id="motorSpeed">电机转速: 17.20RPM</div>
+            <div id="motorTemp">电机温度: 38.20℃</div>
+            <div id="frontBearingTemp">前轴承轴温: 38.50℃</div>
+            <div id="rearBearingTemp">后轴承轴温: 38.40℃</div>
+            
+            <label for="dataSelection">观察指标:</label>
+            <select id="dataSelection" onmousedown="this.selectedIndex = 0;" onchange="handleSelectionChange()">
+                <option value="" disabled selected>-</option>
+                <option value="dataset_overview">数据集概览</option>
+                <option value="motor_speed">电机转速</option>
+                <option value="motor_temperature">电机温度</option>
+                <option value="front_bearing_temperature">前轴承轴温</option>
+                <option value="rear_bearing_temperature">后轴承轴温</option>
+            </select>
+
+            <!-- 用于展示图表的容器 -->
+            <div id="chartContainer">
+                <img id="motorTemperatureChart" src="" alt="电机温度图表" style="display:none;">
+                <img id="motorTemperatureDynamicChart" src="" alt="电机温度动态图" style="display:none;">
+            </div>
+
+            <!-- 数据描述表格 -->
+            <div class="data-description" style="display: none;">
+                <h2>数据集概览（前7日-截至今日00：00）</h2>
+                <table id="dataDescriptionTable" style="width:100%; border-collapse: collapse;">
+                    <tbody>
+                        <!-- 数据描述将插入到这里 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel top-right">
+            <h2 class="score-title">
+                健康评分
+                <span class="help-icon" title="使用支持向量机（SVM）模型进行计算并将值处理为0~100分。分数越高代表压力机的健康状态越好。">?</span>
+            </h2>
+            <div id="healthScore">99.5分</div>
+            <div class="light-container">
+                <div class="light-wrapper">
+                    <div class="light green" id="greenLight"></div>
+                    <div class="light-label" id="greenLabel">健康</div>
+                </div>
+                <div class="light-wrapper">
+                    <div class="light yellow" id="yellowLight"></div>
+                    <div class="light-label" id="yellowLabel">风险</div>
+                </div>
+                <div class="light-wrapper">
+                    <div class="light red" id="redLight"></div>
+                    <div class="light-label" id="redLabel">预警</div>
+                </div>
+            </div>
+            <div class="tooltip" id="tooltip">健康评分计算公式为: xxxxxxxxx。请分别检查相关项目以确保压力机运转健康。</div>
+        </div>
+        <div class="panel bottom-left">
+            <h2>异常检测</h2>
+            <div class="toggle-button">
+                <label>
+                    <input type="checkbox" id="anomalyToggle" onchange="toggleDetection()" /> 开启异常检测
+                </label>
+            </div>
+            <div class="dropdown">
+                <label for="detectionMethod">选择检测方法:</label>
+                <select id="detectionMethod" onchange="showParameterConfig()" disabled>
+                    <option value="" disabled selected>-</option>
+                    <option value="rule-based">基于规则的检测</option>
+                    <option value="statistical">基于统计方法</option>
+                    <option value="machine-learning">基于机器学习方法</option>
+                    <option value="time-series">时间序列预测</option>
+                </select>
+            </div>
+            <div class="parameter-config" id="parameterConfig" style="display: none;">
+                <div id="ruleBasedConfig" class="config" style="display: none;">
+                    <label for="threshold">设置最小阈值:</label>
+                    <input type="number" id="threshold" placeholder="例如: 50">
+                    <label for="threshold">设置最大阈值:</label>
+                    <input type="number" id="threshold" placeholder="例如: 50">
+                </div>
+                <div id="statisticalConfig" class="config" style="display: none;">
+                    <label for="stdDev">设置标准差倍数:</label>
+                    <input type="number" id="stdDev" placeholder="例如: 3">
+                </div>
+                <div id="mlConfig" class="config" style="display: none;">
+                    <label for="modelType">选择模型类型:</label>
+                    <select id="modelType">
+                        <option value="SVM">SVM</option>
+                        <option value="decision-tree">决策树</option>
+                    </select>
+                    <label for="modelUpload">或 上传训练好的模型:</label>
+                    <input type="file" id="modelUpload">
+                </div>
+                <div id="timeSeriesConfig" class="config" style="display: none;">
+                    <label for="seasonalPeriod">设置季节性周期:</label>
+                    <input type="number" id="seasonalPeriod" placeholder="例如: 12">
+                    <label for="order">设置阶数:</label>
+                    <input type="number" id="order" placeholder="例如: 1">
+                </div>
+            </div>
+            <button class="alert-button" id="startDetectionButton" onclick="startDetection()" style="display: none;">开始检测</button>
+            <div id="progressContainer" style="display: none;">
+                <div id="progressBar" style="width: 0%; height: 20px; background-color: green;"></div>
+            </div>
+            <div id="detectionResult" style="display: none; color: white;">该检测未发现异常</div>
+            <div class="anomaly-details" id="anomalyDetails" style="display: none;">上次检测状态: 无异常</div>
+            <button class="alert-button" id="alertButton" onclick="triggerAlert()">上传警报</button>
+        </div>
+        <div class="panel bottom-right">
+            <h2>联邦学习设备状态识别</h2>
+            <button class="alert-button" id="federatedLearningButton" onclick="window.location.href='/frontend/federal_learning.html'">进入联邦学习模块</button>
+        </div>
+    </main>
+    <script>
+        let detectionPerformed = false; // 新变量，跟踪是否进行过检测
+
+        function toggleDetection() {
+            const isChecked = document.getElementById("anomalyToggle").checked;
+            const detectionMethodSelect = document.getElementById("detectionMethod");
+            const startDetectionButton = document.getElementById("startDetectionButton");
+
+            detectionMethodSelect.disabled = !isChecked; // 根据复选框状态启用/禁用下拉框
+            startDetectionButton.style.display = isChecked ? "block" : "none"; // 根据复选框状态显示/隐藏开始检测按钮
+        }
+
+        function updateTemperatures() {
+            setInterval(() => {
+                const motorSpeed = (Math.random() * (18 - 17) + 17).toFixed(2); // 生成17到18之间的随机数，保留两位小数
+                const motorTemp = (Math.random() * (38.49 - 38.4) + 38.4).toFixed(2); // 生成38.4到38.49之间的随机数，保留两位小数
+                const frontBearingTemp = (Math.random() * (38.2 - 38.11) + 38.11).toFixed(2); // 生成38.11到38.2之间的随机数，保留两位小数
+                const rearBearingTemp = (Math.random() * (38.37 - 38.3) + 38.3).toFixed(2); // 生成38.3到38.37之间的随机数，保留两位小数
+
+                // 更新显示
+                document.getElementById("motorSpeed").innerText = `电机转速: ${motorSpeed}RPM`;
+                document.getElementById("motorTemp").innerText = `电机温度: ${motorTemp}℃`;
+                document.getElementById("frontBearingTemp").innerText = `前轴承轴温: ${frontBearingTemp}℃`;
+                document.getElementById("rearBearingTemp").innerText = `后轴承轴温: ${rearBearingTemp}℃`;
+            }, 1000); // 每秒更新一次
+        }
+
+        function updateHealthScore() {
+            setInterval(() => {
+                const healthScore = (Math.random() * (99.6 - 99.5) + 99.5).toFixed(1); // 生成99.5到99.6之间的随机数，保留一位小数
+                document.getElementById("healthScore").innerText = `${healthScore}分`;
+            }, 3000); // 每3秒更新一
+        }
+
+        function showTooltip(event) {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.style.display = "block";
+            tooltip.style.left = (event.pageX + 10) + "px"; // 在鼠标右侧显示
+            tooltip.style.top = (event.pageY + 20) + "px"; // 在鼠标下方显示
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById("tooltip");
+            tooltip.style.display = "none";
+        }
+
+        function triggerAlert() {
+            alert("报警通知：检测到异常状态！");
+        }
+
+        function showParameterConfig() {
+            const method = document.getElementById("detectionMethod").value;
+            const configDiv = document.getElementById("parameterConfig");
+            configDiv.style.display = "block"; // 显示参数配置区域
+
+            // 根据选择的检测方法显示相应的参数配置
+            document.getElementById("ruleBasedConfig").style.display = method === "rule-based" ? "block" : "none";
+            document.getElementById("statisticalConfig").style.display = method === "statistical" ? "block" : "none";
+            document.getElementById("mlConfig").style.display = method === "machine-learning" ? "block" : "none";
+            document.getElementById("timeSeriesConfig").style.display = method === "time-series" ? "block" : "none";
+
+            // 显示开始检测按钮
+            document.getElementById("startDetectionButton").style.display = "block";
+        }
+
+        function startDetection() {
+            const progressBar = document.getElementById("progressBar");
+            const progressContainer = document.getElementById("progressContainer");
+            const detectionResult = document.getElementById("detectionResult");
+            const anomalyDetails = document.getElementById("anomalyDetails");
+
+            progressContainer.style.display = "block"; // 显示进度条容器
+            detectionResult.style.display = "none"; // 隐藏检测结果
+            anomalyDetails.style.display = "block"; // 显示上次检测状态
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 20; // 每次增加20%
+                progressBar.style.width = progress + "%"; // 更新进度条宽度
+
+                if (progress >= 100) {
+                    clearInterval(interval); // 停止计时
+                    detectionPerformed = true; // 标记已进行检测
+                    detectionResult.style.display = "block"; // 显示检测结果
+                    anomalyDetails.innerText = "上次检测状态: 无异常"; // 新检测状态
+                }
+            }, 1000); // 每秒更新一次
+        }
+
+        function fetchMotorTemperatureChart() {
+            const imgElement = document.getElementById('motorTemperatureDynamicChart');
+            imgElement.src = '/api/motor_temperature_dynamic_chart'; // 设置图像源为 API 路由
+            imgElement.style.display = 'block'; // 显示动态图
+        }
+
+        function handleSelectionChange() {
+            const selectedValue = document.getElementById('dataSelection').value;
+            const chartImage = document.getElementById('motorTemperatureChart');
+            const dynamicChartImage = document.getElementById('motorTemperatureDynamicChart');
+            const dataDescription = document.querySelector('.data-description');
+
+            // 隐藏所有图表和数据描述
+            chartImage.style.display = 'none';
+            dynamicChartImage.style.display = 'none';
+            dataDescription.style.display = 'none';
+
+            // 根据选择的值进行不同的操作
+            if (selectedValue === 'dataset_overview') {
+                // 请求数据描述并填充表格
+                fetchDataDescription();
+                dataDescription.style.display = 'block'; // 显示数据描述表格
+            } else if (selectedValue === 'motor_temperature') {
+                // 显示电机温度动态图
+                fetchMotorTemperatureChart(); // 获取动态图
+            }
+        }
+
+        // 获取数据描述并填充表格
+        function fetchDataDescription() {
+            fetch('/api/data_description')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应不正常');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tableBody = document.getElementById('dataDescriptionTable').getElementsByTagName('tbody')[0];
+                    tableBody.innerHTML = ''; // 清空现有内容
+
+                    // 遍历数据描述并填充表格
+                    for (const [key, value] of Object.entries(data)) {
+                        const row = tableBody.insertRow();
+                        const statCell = row.insertCell(0);
+                        const valueCell = row.insertCell(1);
+                        statCell.textContent = key; // 统计量名称
+
+                        // 提取并格式化值
+                        const formattedValues = `
+                            均值: ${value['均值'] || 'N/A'}, 
+                            方差: ${value['方差'] || 'N/A'}, 
+                            最小值: ${value['最小值'] || 'N/A'}, 
+                            最大值: ${value['最大值'] || 'N/A'}, 
+                            计数: ${value['计数'] || 'N/A'}, 
+                            25%: ${value['25%'] || 'N/A'}, 
+                            50%: ${value['50%'] || 'N/A'}, 
+                            75%: ${value['75%'] || 'N/A'}
+                        `;
+                        valueCell.textContent = formattedValues; // 统计量值
+                    }
+                    document.querySelector('.data-description').style.display = 'block'; // 显示数据描述表格
+                })
+                .catch(error => {
+                    console.error('获取数据描述失败:', error);
+                });
+        }
+
+        // 在页面加载时设置初始状态
+        document.addEventListener("DOMContentLoaded", () => {
+            toggleDetection(); // 调用以设置初始状态
+            handleSelectionChange(); // 确保始状态不显示图表
+            updateTemperatures(); // 启动温度更新
+            updateHealthScore(); // 启动健康评分更新
+        });
+    </script>
+</body>
+</html>

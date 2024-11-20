@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>数据安全管理</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body, html {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.35);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .nav-buttons {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 3;
+        }
+        .nav-button {
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.65);
+        }
+        .nav-button-special{
+            background-color: rgba(255, 255, 255, 0.65);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        main {
+            margin: 0 auto;
+            padding: 60px 40px 20px 40px;
+            flex-grow: 1;
+            background-color: rgba(10, 25, 47, 0.3);
+            width: 100%;
+            max-width: 1200px;
+            box-sizing: border-box;
+            z-index: 2;
+        }
+        .content-wrapper {
+            display: flex;
+            margin-top: 60px;
+            width: 100%;
+            min-height: calc(100vh - 60px);
+        }
+        * {
+            color: #ffffff;
+        }
+        nav, aside, main {
+            background-color: transparent;
+            border: none;
+        }
+        .panel {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(101, 53, 215, 0.1);
+        }
+        .panel h2 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        .panel h3 {
+            color: #9B6DFF;
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+        .panel p {
+            color: #FFFFFF;
+            line-height: 1.6;
+        }
+        .chart {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        a.return-link {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 0.8em;
+            text-decoration: none;
+            z-index: 3;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        .logo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 3;
+        }
+        .logo img {
+            width: 100px; /* 调整图标大小 */
+            height: auto;
+        }
+        .development-notice {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: white;
+            font-size: 14px;
+            opacity: 0.8;
+            font-style: italic;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <video class="video-background" id="video_mp4" autoplay muted loop>
+        <source src="figures/15.mp4" type="video/mp4">
+        您的浏览器不支持视频标签。
+    </video>
+    <div class="overlay"></div>
+    <a href="intro.html" class="return-link">返回</a> 
+    <div class="logo">
+        <img src="figures/7.png" alt="Logo">
+    </div> 
+    <div class="nav-buttons">
+        <button class="nav-button" onclick="window.location.href='index.html'">首页</button>
+        <button class="nav-button" onclick="window.location.href='health_monitor.html'">健康监测</button>
+        <button class="nav-button" onclick="window.location.href='maintenance_optimization.html'">维护优化</button>
+        <button class="nav-button" onclick="window.location.href='production_scheduling.html'">产能预测与调度</button>
+        <button class="nav-button" onclick="window.location.href='quality_control_defect_prediction.html'">质量控制</button>
+        <button class="nav-button-special" onclick="window.location.href='privacy_security_management.html'">数据安全</button>
+    </div>
+    <main id="mainContent">
+        <div class="dashboard">
+            <div class="panel">
+                <h2>数据加密</h2>
+                <!-- 数据加密内容 -->
+            </div>
+            <div class="panel">
+                <h2>访问控制</h2>
+                <!-- 访问控制内容 -->
+            </div>
+            <div class="panel">
+                <h2>安全审计</h2>
+                <!-- 安全审计内容 -->
+            </div>
+        </div>
+        <div id="security-trend">
+            <h3>安全趋势图</h3>
+            <img src="static/security_trend.jpg" alt="安全趋势图">
+        </div>
+        <div id="line-chart-container">
+            <canvas id="lineChart"></canvas>
+        </div>
+    </main>
+    <div class="development-notice">更多功能正在开发中...</div>
+    <script src="js/privacy_security.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleSidebar');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    console.log('Toggle button clicked');
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
+                    toggleBtn.textContent = sidebar.classList.contains('collapsed') ? '▶' : '◀';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

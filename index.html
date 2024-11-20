@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body, html {
+            background-color: #ffffff;
+            color: #2c1f50;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .video-background {
+            position: relative;
+            top: -10vh;
+            left: 0;
+            width: 100%;
+            height: 79vh;
+            object-fit: cover;
+            z-index: 0;
+            filter: blur(10px);
+            transition: filter 1.5s ease-out;
+        }
+        .logo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 3;
+        }
+        .logo img {
+            width: 100px; /* 调整图标大小 */
+            height: auto;
+        }
+        .nav-buttons {
+            position: fixed;
+            top: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 13;
+            width: 100%;
+            justify-content: center;
+        }
+        .nav-button, .nav-button-special {
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .nav-button:hover, .nav-button-special:hover {
+            background-color: rgba(255, 255, 255, 0.65);
+        }
+        a.return-link {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 0.8em;
+            text-decoration: none;
+            z-index: 14;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        main1{
+            margin: 0 auto;
+            padding: 20px 40px;
+            flex-grow: 0;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 4;
+            color: #ffffff;
+            position: relative;
+            transform: translateY(100vh);
+            transition: transform 0.5s ease-out;
+        }
+        main1 {
+            background: linear-gradient(to bottom right, rgba(29, 36, 138, 1), rgba(79, 13, 94, 1), rgba(194, 114, 182, 0.95));
+            margin-top: -92px;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            text-align: center;
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2), 0 6px 20px rgba(0, 0, 0, 0.19);
+            position: relative;
+            overflow: hidden;
+        }
+        h2 {
+            text-align: center;
+        }
+        p {
+            text-align: center;
+        }
+        #system-status, #dataset-preview {
+            border-radius: 2px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgb(128, 128, 128);
+            border: 1px solid rgb(128, 128, 128);
+            margin: 30px auto;
+            width: 90%;
+            background-color: transparent;
+        }
+        #status-select {
+            color: #2c1f50;
+            border: 1px solid rgb(128, 128, 128);
+            box-shadow: 0 4px 6px rgb(128, 128, 128);
+            padding: 5px;
+            border-radius: 2px;
+            background-color: #ffffff;
+        }
+        #gif-display {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #gif-display img {
+            max-width: 60%;
+            height: auto;
+            display: none;
+            margin: 0 auto;
+        }
+        #temperatureChart {
+            width: 100%;
+            height: 400px;
+        }
+        .team-section {
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .team-section h2 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 30px;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            padding: 0 20px;
+        }
+
+        .team-member {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .team-member:hover {
+            transform: translateY(-5px);
+        }
+
+        .team-member img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            object-position: center 30%;
+        }
+        .team-member:nth-child(1) img {
+            object-position: center 15%;
+        }
+        .team-member:nth-child(2) img {
+            object-position: center 10%;
+        }
+        .team-member:nth-child(3) img {
+            object-position: center 45%;
+        }
+        .team-member:last-child img {
+            object-position: center 15%;
+        }
+
+        .member-title {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .member-role, .member-education {
+            color: #ffffff;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-top: 10px;
+            opacity: 0.9;
+            text-align: left;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <video class="video-background" id="video_mp4" autoplay muted loop>
+        <source src="figures/14.mp4" type="video/mp4">
+        您的浏览器不支持视频标签。
+    </video>
+    <a href="intro.html" class="return-link">返回</a>
+    <div class="logo">
+        <img src="figures/7.png" alt="Logo">
+    </div>
+    <div class="nav-buttons">
+        <button class="nav-button-special" onclick="window.location.href='index.html'">首页</button>
+        <button class="nav-button" onclick="window.location.href='health_monitor.html'">健康监测</button>
+        <button class="nav-button" onclick="window.location.href='maintenance_optimization.html'">维护优化</button>
+        <button class="nav-button" onclick="window.location.href='production_scheduling.html'">产能预测与调度</button>
+        <button class="nav-button" onclick="window.location.href='quality_control_defect_prediction.html'">质量控制</button>
+        <button class="nav-button" onclick="window.location.href='privacy_security_management.html'">数据安全</button>
+    </div>
+    <main1 id="mainContent">
+        <h2>欢迎来到由深睿DeepVise团队开发的联邦学习压力机质量管控系统的主页面！</h2>
+        <div class="team-section">
+            <h2>开发团队介绍</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <img src="figures/6.jpg" alt="赵嘉熙">
+                    <p class="member-title">赵嘉熙</p>
+                    <p class="member-role">
+                        ·负责项目整体规划和协调，协助全部流程推进
+                    </p>
+                    <p class="member-education">
+                        ·南方科技大学计算机学士
+                    </p>
+                    <p class="member-education">
+                        ·香港中文大学(深圳)信息管理与商业分析在读硕士
+                    </p>
+                </div>
+                <div class="team-member">
+                    <img src="figures/10.jpg" alt="沈宇阳">
+                    <p class="member-title">沈宇阳</p>
+                    <p class="member-role">
+                        ·负责整体系统设计和后端开发以及联邦学习算法开发
+                    </p>
+                    <p class="member-education">
+                        ·西南财经大学金融学学士
+                    </p>
+                    <p class="member-education">
+                        ·香港中文大学(深圳)信息管理与商业分析在读硕士
+                    </p>
+                </div>
+                <div class="team-member">
+                    <img src="figures/8.jpg" alt="陈带敏">
+                    <p class="member-title">陈带敏</p>
+                    <p class="member-role">
+                        ·系统设计、产品报告制作与协助前端开发
+                    </p>
+                    <p class="member-education">
+                        ·西南财经大学金融学学士
+                    </p>
+                    <p class="member-education">
+                        ·将就读对外经贸大学金融学硕士
+                    </p>
+                </div>
+                <div class="team-member">
+                    <img src="figures/11.jpg" alt="严志棋">
+                    <p class="member-title">严志棋</p>
+                    <p class="member-role">
+                        ·技术BP制作与协助前端开发
+                    </p>
+                    <p class="member-education">
+                        ·西南财经大学金融学学士
+                    </p>
+                    <p class="member-education">
+                        ·香港中文大学(深圳)金融学在读硕士
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main1>
+
+    <script>
+        const videos = [
+            document.getElementById('video_mp4'),
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const mainContent2 = document.getElementById('mainContent2');
+            const toggleBtn = document.getElementById('toggleSidebar');
+
+            
+
+            // 视频模糊效果消失
+            const video = document.getElementById('video_mp4');
+            setTimeout(() => {
+                video.style.filter = 'blur(0)'; // 移除模糊效果
+            }, 10); // 延迟1秒以确保过渡效果可见
+
+            // 添加滑入效果
+            setTimeout(() => {
+                mainContent.style.transform = 'translateY(0)';
+                mainContent2.style.transform = 'translateY(0)';
+            }, 10); // 延迟100毫秒以确保过渡效果可见
+
+            // 选择框事件监听
+            const statusSelect = document.getElementById('status-select');
+            const motorTempGif = document.getElementById('motor-temp-gif');
+            const bearingTempGif = document.getElementById('bearing-temp-gif');
+
+            statusSelect.addEventListener('change', () => {
+                motorTempGif.style.display = 'none'; // 默认隐藏所有 GIF
+                bearingTempGif.style.display = 'none';
+
+                if (statusSelect.value === '电机模块电机温度') {
+                    motorTempGif.style.display = 'block'; // 显示电机温度 GIF
+                } else if (statusSelect.value === '高速轴前轴承轴温') {
+                    bearingTempGif.style.display = 'block'; // 显示高速轴前轴承轴温 GIF
+                }
+            });
+
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    // 在页面上显示数据
+                    document.getElementById('data-display').innerText = data.message;
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        });
+
+        let temperatureChart;
+
+        function updateChart() {
+            const selectedModule = document.getElementById("moduleSelect").value;
+            if (selectedModule === "motorTemperature") {
+                fetch('/api/motor_temperature_chart')
+                    .then(response => response.blob())
+                    .then(imageBlob => {
+                        const img = document.createElement('img');
+                        img.src = URL.createObjectURL(imageBlob);
+                        img.onload = () => {
+                            const ctx = document.getElementById('temperatureChart').getContext('2d');
+                            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); // 清空画布
+                            ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height); // 绘制图像
+                        };
+                    })
+                    .catch(error => console.error('Error fetching chart:', error));
+            }
+        }
+
+        // 初始化图表
+        updateChart();
+    </script>
+</body>
+</html>
